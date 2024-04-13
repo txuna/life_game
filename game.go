@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"server/network"
-	"server/packet"
+	"server/protocol"
 )
 
 type LifeGameServer struct {
 	ServerIndex int
 	netConfig   network.NetConfig
-	PacketChan  chan packet.Packet
+	PacketChan  chan protocol.Packet
 }
 
 func startLifeGameServer(netConfig network.NetConfig) {
@@ -18,10 +18,12 @@ func startLifeGameServer(netConfig network.NetConfig) {
 		netConfig:   netConfig,
 	}
 
+	protocol.InitPacketHeaderSize()
+
 	/*
 		채널 버퍼 256으로 설정
 	*/
-	server.PacketChan = make(chan packet.Packet, 256)
+	server.PacketChan = make(chan protocol.Packet, 256)
 
 	/*
 		패킷을 처리하는 고루틴
