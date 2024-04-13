@@ -3,13 +3,30 @@ package main
 import (
 	"fmt"
 	"server/network"
+	"server/packet"
 )
 
 type LifeGameServer struct {
+	ServerIndex int
+	netConfig   network.NetConfig
+	PacketChan  chan packet.Packet
 }
 
-func startLifeGameServer() {
-	server := LifeGameServer{}
+func startLifeGameServer(netConfig network.NetConfig) {
+	server := LifeGameServer{
+		ServerIndex: 1,
+		netConfig:   netConfig,
+	}
+
+	/*
+		채널 버퍼 256으로 설정
+	*/
+	server.PacketChan = make(chan packet.Packet, 256)
+
+	/*
+		패킷을 처리하는 고루틴
+	*/
+	go server.PacketProcessGoroutine()
 
 	/*
 		네트워크의 콜백함수를 지정한다.
@@ -23,7 +40,7 @@ func startLifeGameServer() {
 		PacketHeaderSize:    network.PACKET_HEADER_SIZE,
 	}
 
-	network.StartServerBlock(snFunctor)
+	network.StartServerBlock(netConfig, snFunctor)
 }
 
 /*

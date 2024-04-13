@@ -1,21 +1,27 @@
 package packet
 
 const (
-	SOCK_BUFFER = 4096
+	PACKET_TYPE_NORMAL   = 0
+	PACKET_TYPE_COMPRESS = 1
+	PACKET_TYPE_SECURE   = 2
 )
 
 const (
-	PACKET_ID_REGISTER_REQUEST  = 1
-	PACKET_ID_REGISTER_RESPONSE = 2
-	PACKET_ID_LOGIN_REQUEST     = 3
-	PACKET_ID_LOGIN_RESPONSE    = 4
+	MAX_USER_ID_BYTE_LENGTH      = 16
+	MAX_USER_PW_BYTE_LENGTH      = 16
+	MAX_CHAT_MESSAGE_BYTE_LENGTH = 126
 )
 
-const (
-	ERROR_ID_NONE              = 1000
-	ERROR_ID_INVALID_REQUEST   = 1001
-	ERROR_ID_ALREADY_ACCOUNT   = 1002
-	ERROR_ID_INVALID_PASSWORD  = 1003
-	ERROR_ID_NOT_EXIST_ACCOUNT = 1004
-	ERROR_ID_INVALID_EMAIL     = 1005
-)
+type Header struct {
+	TotalSize  int16
+	ID         int16
+	PacketType int8
+}
+
+type Packet struct {
+	UserSessionIndex       int32
+	UserSessionUniqueIndex uint64
+	Id                     int16
+	DataSize               int16
+	Data                   []byte
+}

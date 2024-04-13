@@ -1,5 +1,11 @@
 package main
 
+import "server/network"
+
 func main() {
-	startLifeGameServer()
+	netConfig := network.NetConfig{
+		BindAdress: "0.0.0.0",
+		Port:       8000,
+	}
+	startLifeGameServer(netConfig)
 }

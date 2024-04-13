@@ -7,6 +7,11 @@ import (
 	"sync/atomic"
 )
 
+type NetConfig struct {
+	BindAdress string
+	Port       int
+}
+
 /*
 * 	RING BUFFER?
  */
@@ -37,12 +42,13 @@ type TcpSessionManager struct {
 	SessionIndexPool *Deque
 }
 
-func StartServerBlock(networkFunctor SessionNetworkFunctor) {
+func StartServerBlock(netConfig NetConfig, networkFunctor SessionNetworkFunctor) {
 
 	fmt.Println("TCP Server Start on 8000 port")
 	/* TcpSession 매니저 생성 */
 	_tcpSessionManager = createSessionManager(networkFunctor)
-	l, err := net.Listen("tcp", ":8000")
+	address := fmt.Sprintf(":%d", netConfig.Port)
+	l, err := net.Listen("tcp", address)
 	if err != nil {
 		fmt.Println(err)
 		return
