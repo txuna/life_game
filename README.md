@@ -1,5 +1,12 @@
 # Client - Server Architecture 
 
+### Packet
+
+- Packet Header
+패킷 헤더의 크기는 5바이트 
+
+패킷의 총 크기(2바이트 header + body) + 패킷ID(2 바이트) + 패킷 Type(1 바이트) 
+
 ### Protocol 
 
 #### Register Request 

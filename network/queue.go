@@ -16,6 +16,10 @@ type Deque struct {
 	capacity  int
 }
 
+/*
+item을 interface형태로 넣는다.
+컨테이너 뒤에 값을 넣는다.
+*/
 func (d *Deque) Append(item interface{}) (int, bool) {
 	d.Lock()
 	defer d.Unlock()
@@ -30,6 +34,10 @@ func (d *Deque) Append(item interface{}) (int, bool) {
 	return 0, false
 }
 
+/*
+item을 interface형태로 넣는다.
+컨테이너 앞에 값을 넣는다.
+*/
 func (d *Deque) Prepend(item interface{}) (int, bool) {
 	d.Lock()
 	defer d.Unlock()
@@ -44,6 +52,9 @@ func (d *Deque) Prepend(item interface{}) (int, bool) {
 	return 0, false
 }
 
+/*
+컨테이너의 뒤에서 값을 뺀다.
+*/
 func (d *Deque) Pop() interface{} {
 	d.Lock()
 	defer d.Unlock()
@@ -59,6 +70,9 @@ func (d *Deque) Pop() interface{} {
 	return item
 }
 
+/*
+컨테이너 앞에서 값을 뺀다.
+*/
 func (d *Deque) Shift() interface{} {
 	d.Lock()
 	defer d.Unlock()
@@ -74,6 +88,10 @@ func (d *Deque) Shift() interface{} {
 	return item
 }
 
+/*
+컨테이너 앞의 값을 확인한다.
+(지우진 않는다.)
+*/
 func (d *Deque) First() interface{} {
 	d.RLock()
 	defer d.RUnlock()
@@ -86,6 +104,10 @@ func (d *Deque) First() interface{} {
 	return nil
 }
 
+/*
+컨테이너 뒤의 값을 확인한다.
+(지우진 않는다.)
+*/
 func (d *Deque) Last() interface{} {
 	d.RLock()
 	defer d.RUnlock()
@@ -98,6 +120,9 @@ func (d *Deque) Last() interface{} {
 	return nil
 }
 
+/*
+컨테이너 크기를 확인한다.
+*/
 func (d *Deque) Size() int {
 	d.RLock()
 	defer d.RUnlock()
@@ -105,6 +130,9 @@ func (d *Deque) Size() int {
 	return d.container.Len()
 }
 
+/*
+컨테이너의 용량을 확인한다.
+*/
 func (d *Deque) Capacity() int {
 	d.RLock()
 	defer d.RUnlock()
@@ -112,6 +140,9 @@ func (d *Deque) Capacity() int {
 	return d.capacity
 }
 
+/*
+컨테이너가 현재 비워져있는지 확인한다.
+*/
 func (d *Deque) Empty() bool {
 	d.RLock()
 	defer d.RUnlock()
@@ -119,6 +150,9 @@ func (d *Deque) Empty() bool {
 	return d.container.Len() == 0
 }
 
+/*
+컨테이너가 현재 가득 찬 상태인지 확인한다.
+*/
 func (d *Deque) Full() bool {
 	d.RLock()
 	defer d.RUnlock()
@@ -126,6 +160,10 @@ func (d *Deque) Full() bool {
 	return d.capacity >= 0 && d.container.Len() >= d.capacity
 }
 
+/*
+새로운 컨테이너를 생성한다.
+용량은 인자로 설정한다.
+*/
 func NewDeque() *Deque {
 	return NewCappedDeque(CAPACITY_INFINITE)
 }
