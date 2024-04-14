@@ -8,8 +8,8 @@ import (
 )
 
 type NetConfig struct {
-	BindAdress string
-	Port       int
+	BindAdress string `json:"bind_address"`
+	Port       int    `json:"port"`
 }
 
 /*
