@@ -69,3 +69,49 @@ func PacketHeaderSize() int16 {
 	hSize := unsafe.Sizeof(reflect.TypeOf(header))
 	return (int16)(hSize)
 }
+
+type LoginReqPacket struct {
+	UserID []byte
+	UserPW []byte
+}
+
+func (loginReq LoginReqPacket) EncodingPacket() {
+
+}
+
+func (loginReq *LoginReqPacket) Decoding() {
+
+}
+
+type LoginResPacket struct {
+}
+
+func (loginRes LoginResPacket) EncodingPacket() {
+
+}
+
+func (loginRes *LoginResPacket) Decoding() {
+
+}
+
+type JoinReqPacket struct {
+}
+
+func (joinReq JoinReqPacket) EncodingPacket() {
+
+}
+
+func (joinReq *JoinReqPacket) Decoding() {
+
+}
+
+type JoinResPacket struct {
+}
+
+func (joinRes JoinResPacket) EncodingPacket() {
+
+}
+
+func (joinRes *JoinResPacket) Decoding() {
+
+}

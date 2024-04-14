@@ -9,13 +9,16 @@
 
 ### Protocol 
 
-#### Register Request 
+1. Login Request 
 
-#### Register Response 
 
-#### Login Request 
+2. Login Response 
 
-#### Login Response
+
+3. Join Request 
+
+
+4. Join Request
 
 ### Client Connect To Server
 클라이언트의 접속 요청이 오면 서버의 네트워크 모듈은 TcpSession을 만들고 Network 관련 콜백 함수 등록 및 TcpSessionManager에 추가 

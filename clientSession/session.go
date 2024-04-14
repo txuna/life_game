@@ -1,4 +1,4 @@
-package session
+package clientsession
 
 type Session struct {
 }

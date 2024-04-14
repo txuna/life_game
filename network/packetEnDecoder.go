@@ -2,6 +2,12 @@ package network
 
 import "encoding/binary"
 
+type RawPacketData struct {
+	Pos   int
+	Data  []byte
+	Order binary.ByteOrder
+}
+
 /*
 패킷 헤더의 구조는 아래와 같음
 패킷전체크기(2byte) + 패킷ID(2byte) + 패킷 Type(1byte)
@@ -10,4 +16,36 @@ import "encoding/binary"
 func PacketTotalSize(data []byte) int16 {
 	totalSize := binary.LittleEndian.Uint16(data)
 	return int16(totalSize)
+}
+
+func MakeReader(buffer []byte, isLittleEndian bool) RawPacketData {
+	if isLittleEndian {
+		return RawPacketData{
+			Data:  buffer,
+			Pos:   0,
+			Order: binary.LittleEndian,
+		}
+	}
+
+	return RawPacketData{
+		Data:  buffer,
+		Pos:   0,
+		Order: binary.BigEndian,
+	}
+}
+
+func MakeWrite(buffer []byte, isLittleEndian bool) RawPacketData {
+	if isLittleEndian {
+		return RawPacketData{
+			Data:  buffer,
+			Pos:   0,
+			Order: binary.LittleEndian,
+		}
+	}
+
+	return RawPacketData{
+		Data:  buffer,
+		Pos:   0,
+		Order: binary.BigEndian,
+	}
 }

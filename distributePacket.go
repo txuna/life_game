@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"server/protocol"
+	"time"
 )
 
 /*
@@ -34,11 +35,41 @@ DistributePacket함수에서 채널형식으로 넘겨줌
 실질적인 패킷 처리 함수
 */
 func (server *LifeGameServer) PacketProcessGoroutine() {
+
+	roomUpdateTimerTicker := time.NewTicker(time.Second)
+	defer roomUpdateTimerTicker.Stop()
+
 	for {
 		select {
 		case packet := <-server.PacketChan:
 			{
-				fmt.Println(packet)
+				sessionId := packet.UserSessionIndex
+				sessionUniqueId := packet.UserSessionUniqueIndex
+				bodySize := packet.DataSize
+				bodyData := packet.Data
+
+				_ = sessionId
+				_ = sessionUniqueId
+				_ = bodySize
+				_ = bodyData
+
+				if packet.Id == protocol.PACKET_ID_LOGIN_REQ {
+
+				} else if packet.Id == protocol.PACKET_ID_JOIN_REQ {
+
+				} else {
+					fmt.Println("Invalid Packet ID")
+				}
+			}
+
+		/*
+			초당 호출되는 로직
+			이때 방을 업데이트를 진행한다.
+		*/
+		case curTime := <-roomUpdateTimerTicker.C:
+			{
+				fmt.Println("Update Room")
+				fmt.Println(curTime)
 			}
 		}
 	}

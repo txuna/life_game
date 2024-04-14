@@ -1,1 +1,8 @@
 package protocol
+
+const (
+	PACKET_ID_LOGIN_REQ = 701
+	PACKET_ID_LOGIN_RES = 702
+	PACKET_ID_JOIN_REQ  = 703
+	PACKET_ID_JOIN_RES  = 704
+)
