@@ -115,3 +115,27 @@ func (joinRes JoinResPacket) EncodingPacket() {
 func (joinRes *JoinResPacket) Decoding() {
 
 }
+
+type PingReqPacket struct {
+	Ping int8
+}
+
+func (pingReq PingReqPacket) EncodingPacket() {
+
+}
+
+func (pingReq *PingReqPacket) Decoding() {
+
+}
+
+type PingResPacket struct {
+	Pong int8
+}
+
+func (pingRes PingResPacket) EncodingPacket() {
+
+}
+
+func (pingRes *PingResPacket) Decoding() {
+
+}

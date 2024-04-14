@@ -57,6 +57,8 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 
 				} else if packet.Id == protocol.PACKET_ID_JOIN_REQ {
 
+				} else if packet.Id == protocol.PACKET_ID_PING_REQ {
+
 				} else {
 					fmt.Println("Invalid Packet ID")
 				}
