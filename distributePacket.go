@@ -70,8 +70,9 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 		*/
 		case curTime := <-roomUpdateTimerTicker.C:
 			{
-				fmt.Println("Update Room")
-				fmt.Println(curTime)
+				_ = curTime
+				//fmt.Println("Update Room")
+				//fmt.Println(curTime)
 			}
 		}
 	}

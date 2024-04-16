@@ -5,20 +5,8 @@ import (
 	"fmt"
 	"os"
 	"server/network"
+	"server/service"
 )
-
-type DbConfig struct {
-	Type     string `json:"type"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Database string `json:"database"`
-	Protocol string `json:"protocol"`
-}
-
-type RedisConfig struct {
-}
 
 func main() {
 	netConfig, err := parseNetConfig()
@@ -39,8 +27,17 @@ func main() {
 		return
 	}
 
-	_ = redisConfig
-	_ = dbConfig
+	err = service.InitRedis(redisConfig)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = service.InitMysql(dbConfig)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	startLifeGameServer(netConfig)
 }
@@ -60,8 +57,8 @@ func parseNetConfig() (network.NetConfig, error) {
 	return netConfig, err
 }
 
-func parseDbConfig() (DbConfig, error) {
-	var dbConfig DbConfig
+func parseDbConfig() (service.DbConfig, error) {
+	var dbConfig service.DbConfig
 	file, err := os.Open("./config/db_config.json")
 	if err != nil {
 		return dbConfig, nil
@@ -75,8 +72,8 @@ func parseDbConfig() (DbConfig, error) {
 	return dbConfig, nil
 }
 
-func parseRedisConfig() (RedisConfig, error) {
-	var redisConfig RedisConfig
+func parseRedisConfig() (service.RedisConfig, error) {
+	var redisConfig service.RedisConfig
 	file, err := os.Open("./config/redis_config.json")
 	if err != nil {
 		return redisConfig, err
