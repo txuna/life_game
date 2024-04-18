@@ -3,7 +3,7 @@ package protocol
 import (
 	"encoding/binary"
 	"reflect"
-	"unsafe"
+	"server/network"
 )
 
 const (
@@ -61,12 +61,25 @@ func PeekPacketBody(rawData []byte) (int16, []byte) {
 	return bodySize, []byte{}
 }
 
+func EncodingPacketHeader(writer *network.RawPacketData, totalSize int16, pktId int16, pktType int8) {
+	writer.WriteS16(totalSize)
+	writer.WriteS16(pktId)
+	writer.WriteS8(pktType)
+}
+
+func DecodingPacketHeader(header *Header, data []byte) {
+	reader := network.MakeReader(data, true)
+	header.TotalSize, _ = reader.ReadS16()
+	header.ID, _ = reader.ReadS16()
+	header.PacketType, _ = reader.ReadS8()
+}
+
 /*
 패킷헤더의 크기를 사전에 구함
 */
 func PacketHeaderSize() int16 {
 	var header Header
-	hSize := unsafe.Sizeof(reflect.TypeOf(header))
+	hSize := network.Sizeof(reflect.TypeOf(header))
 	return (int16)(hSize)
 }
 
@@ -75,12 +88,36 @@ type LoginReqPacket struct {
 	UserPW []byte
 }
 
-func (loginReq LoginReqPacket) EncodingPacket() {
-
+func (loginReq LoginReqPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_REQ, 0)
+	writer.WriteBytes(loginReq.UserID[:])
+	writer.WriteBytes(loginReq.UserPW[:])
+	return sendBuf, totalSize
 }
 
-func (loginReq *LoginReqPacket) Decoding() {
+func (loginReq *LoginReqPacket) Decoding(bodyData []byte) bool {
+	bodySize := MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	if len(bodyData) != bodySize {
+		return false
+	}
 
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	loginReq.UserID, err = reader.ReadBytes(MAX_USER_ID_BYTE_LENGTH)
+	if err != nil {
+		return false
+	}
+
+	loginReq.UserPW, err = reader.ReadBytes(MAX_USER_PW_BYTE_LENGTH)
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 type LoginResPacket struct {

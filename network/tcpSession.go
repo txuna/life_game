@@ -14,7 +14,7 @@ func (sessionMgr *TcpSessionManager) appendSession(session *TcpSession) bool {
 		return false
 	}
 
-	_, result := sessionMgr.findSession(sessionUniqueId, sessionIndex)
+	_, result := sessionMgr.findSession(sessionUniqueId)
 	/* 이미 세션이 존재한다면 추가로 만들지 않음 */
 	if result {
 		return false
@@ -60,7 +60,7 @@ func (sessionMgr *TcpSessionManager) createSessionPool(poolSize int) {
 	}
 }
 
-func (sessionMgr *TcpSessionManager) findSession(sessionUniqueId uint64, sessionId int32) (*TcpSession, bool) {
+func (sessionMgr *TcpSessionManager) findSession(sessionUniqueId uint64) (*TcpSession, bool) {
 	if session, ok := sessionMgr.SessionMap.Load(sessionUniqueId); ok {
 		return session.(*TcpSession), true
 	}

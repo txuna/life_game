@@ -77,3 +77,7 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 		}
 	}
 }
+
+func ProcessPacketLogin(sessionUniqueId uint64, sessionId int32, bodySize int16, bodyData []byte) {
+	//var request protocol.LoginReqPacket
+}

@@ -1,12 +1,8 @@
-package service
+package mysql
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/redis/go-redis/v9"
 )
 
 type DbConfig struct {
@@ -19,34 +15,8 @@ type DbConfig struct {
 	Protocol string `json:"protocol"`
 }
 
-type RedisConfig struct {
-	Addr             string `json:"addr"`
-	Password         string `json:"password"`
-	DB               int    `json:"db"`
-	SessionUniqueKey string `json:"session_unique_key"`
-	UserPrefix       string `json:"user_prefix"`
-}
-
-var _redisClient *redis.Client
 var _mysqlClient *sql.DB
-var _ctx context.Context
-
-var _redisConfig RedisConfig
 var _mysqlConfig DbConfig
-
-func InitRedis(redisConfig RedisConfig) error {
-	_redisConfig = redisConfig
-	_redisClient = redis.NewClient(&redis.Options{
-		Addr:     redisConfig.Addr,
-		Password: redisConfig.Password,
-		DB:       redisConfig.DB,
-	})
-
-	_ctx = context.Background()
-
-	_ = _redisClient
-	return nil
-}
 
 func InitMysql(dbConfig DbConfig) error {
 	_mysqlConfig = dbConfig

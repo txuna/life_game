@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	clientsession "server/clientSession"
 	"server/network"
 	"server/protocol"
 )
@@ -19,6 +20,11 @@ func startLifeGameServer(netConfig network.NetConfig) {
 	}
 
 	protocol.InitPacketHeaderSize()
+
+	/*
+		클라이언트 세션매니저 초기화
+	*/
+	clientsession.Init()
 
 	/*
 		채널 버퍼 256으로 설정
@@ -50,6 +56,12 @@ func startLifeGameServer(netConfig network.NetConfig) {
 */
 func (server *LifeGameServer) OnClose(sessionUniqueId uint64, sessionId int32) {
 	fmt.Printf("Client Disconnected:%d - %d\n", sessionUniqueId, sessionId)
+	result := clientsession.RemoveSession(sessionUniqueId)
+	if !result {
+		fmt.Println("remove client session failed")
+	} else {
+		fmt.Println("remove client session")
+	}
 }
 
 /*
@@ -58,6 +70,12 @@ func (server *LifeGameServer) OnClose(sessionUniqueId uint64, sessionId int32) {
 */
 func (server *LifeGameServer) OnConnect(sessionUniqueId uint64, sessionId int32) {
 	fmt.Printf("New Client Connected:%d - %d\n", sessionUniqueId, sessionId)
+	result := clientsession.AddSession(sessionUniqueId, sessionId)
+	if !result {
+		fmt.Println("append client session failed")
+	} else {
+		fmt.Println("append client session")
+	}
 }
 
 /*
