@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"server/network"
 	"server/protocol"
 	"time"
 )
@@ -48,13 +50,8 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 				bodySize := packet.DataSize
 				bodyData := packet.Data
 
-				_ = sessionId
-				_ = sessionUniqueId
-				_ = bodySize
-				_ = bodyData
-
 				if packet.Id == protocol.PACKET_ID_LOGIN_REQ {
-
+					ProcessPacketLogin(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else if packet.Id == protocol.PACKET_ID_JOIN_REQ {
 
 				} else if packet.Id == protocol.PACKET_ID_PING_REQ {
@@ -79,5 +76,36 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 }
 
 func ProcessPacketLogin(sessionUniqueId uint64, sessionId int32, bodySize int16, bodyData []byte) {
-	//var request protocol.LoginReqPacket
+	var request protocol.LoginReqPacket
+	result := (&request).Decoding(bodyData)
+	if !result {
+		return
+	}
+
+	userID := bytes.Trim(request.UserID[:], "\x00")
+	if len(userID) <= 0 {
+		return
+	}
+
+	userPW := bytes.Trim(request.UserPW[:], "\x00")
+	if len(userPW) <= 0 {
+		return
+	}
+
+	fmt.Printf("[%d]request login: %s - %s\n", sessionUniqueId, string(userID), string(userPW))
+	/* 로그인 */
+	sendLoginResult(sessionUniqueId, sessionId, protocol.ERROR_CODE_NONE)
+}
+
+func sendLoginResult(sessionUniqueId uint64, sessionId int32, result int16) {
+	loginRes := protocol.LoginResPacket{
+		ErrorCode: result,
+	}
+
+	packet, _ := loginRes.EncodingPacket()
+	network.SendToClient(sessionUniqueId, sessionId, packet)
+}
+
+func sendJoinResult(sessionUniqueId uint64, sessionId int32, result int16) {
+
 }

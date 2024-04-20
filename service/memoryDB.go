@@ -2,16 +2,15 @@ package service
 
 import (
 	"fmt"
-	"server/protocol"
 	"server/redis"
 )
 
 type RedisUser struct {
-	UniqueID     uint64                                 `json:"unique_id"`
-	SessionID    int32                                  `json:"server_id"`
-	UserID       [protocol.MAX_USER_ID_BYTE_LENGTH]byte `json:"user_id"`
-	UserIDLength int8                                   `json:"user_id_length"`
-	IsAuth       bool                                   `json:"is_auth"`
+	UniqueID     uint64 `json:"unique_id"`
+	SessionID    int32  `json:"server_id"`
+	UserID       []byte `json:"user_id"`
+	UserIDLength int8   `json:"user_id_length"`
+	IsAuth       bool   `json:"is_auth"`
 }
 
 /*

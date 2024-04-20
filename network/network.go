@@ -25,9 +25,10 @@ type SessionNetworkFunctor struct {
 }
 
 type TcpSession struct {
-	SeqIndex       uint64 /* 모든 서버 통틀어서 유니크한 값 */
-	Index          int32  /* 특정 서버에서 유니크한 값 */
-	Conn           net.Conn
+	SeqIndex uint64 /* 모든 서버 통틀어서 유니크한 값 */
+	Index    int32  /* 특정 서버에서 유니크한 값 */
+	Conn     net.Conn
+
 	NetworkFunctor SessionNetworkFunctor
 }
 
@@ -120,7 +121,7 @@ func (session *TcpSession) handleTcpRead() {
 			*/
 			/*
 				if recvBytes < PACKET_HEADER_SIZE {
-					session.closeProcess()
+					session.closeProcess()r
 					return
 				}
 			*/
@@ -223,6 +224,14 @@ func (session *TcpSession) closeProcess() {
 func SeqNumIncrement() uint64 {
 	newValue := atomic.AddUint64(&_seqNumber, 1)
 	return newValue
+}
+
+func SendToClient(sessionUniqueId uint64, sessionId int32, data []byte) {
+	_tcpSessionManager.sendPacket(sessionUniqueId, sessionId, data)
+}
+
+func SendToAllClient(data []byte) {
+	_tcpSessionManager.sendPacketAllClient(data)
 }
 
 /* 전역변수 */

@@ -38,6 +38,10 @@ func InitPacketHeaderSize() {
 	_packetHeaderSize = PacketHeaderSize()
 }
 
+func GetPacketHeaderSize() int16 {
+	return _packetHeaderSize
+}
+
 /*
 전체 패킷에서 총 크기를 제외한 다음 2바이트를 꺼내옴
 */
@@ -121,14 +125,33 @@ func (loginReq *LoginReqPacket) Decoding(bodyData []byte) bool {
 }
 
 type LoginResPacket struct {
+	ErrorCode int16
 }
 
-func (loginRes LoginResPacket) EncodingPacket() {
-
+func (loginRes LoginResPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + 2
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_RES, 0)
+	writer.WriteS16(loginRes.ErrorCode)
+	return sendBuf, totalSize
 }
 
-func (loginRes *LoginResPacket) Decoding() {
+func (loginRes *LoginResPacket) Decoding(bodyData []byte) bool {
+	bodySize := 2
+	if len(bodyData) != bodySize {
+		return false
+	}
 
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	loginRes.ErrorCode, err = reader.ReadS16()
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 type JoinReqPacket struct {
@@ -143,6 +166,8 @@ func (joinReq *JoinReqPacket) Decoding() {
 }
 
 type JoinResPacket struct {
+	SessionUniqueId uint64
+	ErrorCode       int16
 }
 
 func (joinRes JoinResPacket) EncodingPacket() {
