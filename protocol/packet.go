@@ -117,11 +117,7 @@ func (loginReq *LoginReqPacket) Decoding(bodyData []byte) bool {
 	}
 
 	loginReq.UserPW, err = reader.ReadBytes(MAX_USER_PW_BYTE_LENGTH)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 type LoginResPacket struct {
@@ -147,57 +143,116 @@ func (loginRes *LoginResPacket) Decoding(bodyData []byte) bool {
 
 	var err error
 	loginRes.ErrorCode, err = reader.ReadS16()
+	return err == nil
+}
+
+type JoinReqPacket struct {
+	UserID []byte
+	UserPW []byte
+}
+
+func (joinReq JoinReqPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_REQ, 0)
+	writer.WriteBytes(joinReq.UserID[:])
+	writer.WriteBytes(joinReq.UserPW[:])
+	return sendBuf, totalSize
+}
+
+func (joinReq *JoinReqPacket) Decoding(bodyData []byte) bool {
+	bodySize := MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	if len(bodyData) != bodySize {
+		return false
+	}
+
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	joinReq.UserID, err = reader.ReadBytes(MAX_USER_ID_BYTE_LENGTH)
 	if err != nil {
 		return false
 	}
 
-	return true
-}
-
-type JoinReqPacket struct {
-}
-
-func (joinReq JoinReqPacket) EncodingPacket() {
-
-}
-
-func (joinReq *JoinReqPacket) Decoding() {
-
+	joinReq.UserPW, err = reader.ReadBytes(MAX_USER_PW_BYTE_LENGTH)
+	return err == nil
 }
 
 type JoinResPacket struct {
-	SessionUniqueId uint64
-	ErrorCode       int16
+	ErrorCode int16
 }
 
-func (joinRes JoinResPacket) EncodingPacket() {
-
+func (joinRes JoinResPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + 2
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_RES, 0)
+	writer.WriteS16(joinRes.ErrorCode)
+	return sendBuf, totalSize
 }
 
-func (joinRes *JoinResPacket) Decoding() {
+func (joinRes *JoinResPacket) Decoding(bodyData []byte) bool {
+	bodySize := 2
+	if len(bodyData) != bodySize {
+		return false
+	}
 
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	joinRes.ErrorCode, err = reader.ReadS16()
+	return err == nil
 }
 
 type PingReqPacket struct {
 	Ping int8
 }
 
-func (pingReq PingReqPacket) EncodingPacket() {
-
+func (pingReq PingReqPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + int16(network.Sizeof(reflect.TypeOf(int8(0))))
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_PING_REQ, 0)
+	writer.WriteS8(pingReq.Ping)
+	return sendBuf, totalSize
 }
 
-func (pingReq *PingReqPacket) Decoding() {
+func (pingReq *PingReqPacket) Decoding(bodyData []byte) bool {
+	bodySize := network.Sizeof(reflect.TypeOf(int8(0)))
+	if len(bodyData) != bodySize {
+		return false
+	}
 
+	reader := network.MakeReader(bodyData, true)
+	var err error
+	pingReq.Ping, err = reader.ReadS8()
+	return err == nil
 }
 
 type PingResPacket struct {
 	Pong int8
 }
 
-func (pingRes PingResPacket) EncodingPacket() {
-
+func (pingRes PingResPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + int16(network.Sizeof(reflect.TypeOf(int8(0))))
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_PING_RES, 0)
+	writer.WriteS8(pingRes.Pong)
+	return sendBuf, totalSize
 }
 
-func (pingRes *PingResPacket) Decoding() {
+func (pingRes *PingResPacket) Decoding(bodyData []byte) bool {
+	bodySize := network.Sizeof(reflect.TypeOf(int8(0)))
+	if len(bodyData) != bodySize {
+		return false
+	}
 
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	pingRes.Pong, err = reader.ReadS8()
+
+	return err == nil
 }

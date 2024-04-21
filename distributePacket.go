@@ -55,7 +55,7 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 				} else if packet.Id == protocol.PACKET_ID_JOIN_REQ {
 
 				} else if packet.Id == protocol.PACKET_ID_PING_REQ {
-
+					ProcessPacketPing(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else {
 					fmt.Println("Invalid Packet ID")
 				}
@@ -75,6 +75,35 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 	}
 }
 
+func ProcessPacketPing(sessionUniqueId uint64, sessionId int32, bodySize int16, bodyData []byte) {
+	var request protocol.PingReqPacket
+	result := (&request).Decoding(bodyData)
+	if !result {
+		return
+	}
+
+	fmt.Printf("[%d]-[%d] Client Send PING\n", sessionUniqueId, sessionId)
+}
+
+func ProcessPacketJoin(sessionUniqueId uint64, sessionId int32, bodySize int16, bodyData []byte) {
+	var request protocol.JoinReqPacket
+	result := (&request).Decoding(bodyData)
+	if !result {
+		return
+	}
+
+	userID := bytes.Trim(request.UserID[:], "\x00")
+	userPW := bytes.Trim(request.UserPW[:], "\x00")
+
+	if len(userID) <= 0 || len(userPW) <= 0 {
+		return
+	}
+
+	fmt.Printf("[%d]request join: %s-%s\n", sessionUniqueId, string(userID), string(userPW))
+	/* 회원가입 */
+	sendJoinResult(sessionUniqueId, sessionId, protocol.ERROR_CODE_NONE)
+}
+
 func ProcessPacketLogin(sessionUniqueId uint64, sessionId int32, bodySize int16, bodyData []byte) {
 	var request protocol.LoginReqPacket
 	result := (&request).Decoding(bodyData)
@@ -83,12 +112,9 @@ func ProcessPacketLogin(sessionUniqueId uint64, sessionId int32, bodySize int16,
 	}
 
 	userID := bytes.Trim(request.UserID[:], "\x00")
-	if len(userID) <= 0 {
-		return
-	}
-
 	userPW := bytes.Trim(request.UserPW[:], "\x00")
-	if len(userPW) <= 0 {
+
+	if len(userID) <= 0 || len(userPW) <= 0 {
 		return
 	}
 
@@ -107,5 +133,10 @@ func sendLoginResult(sessionUniqueId uint64, sessionId int32, result int16) {
 }
 
 func sendJoinResult(sessionUniqueId uint64, sessionId int32, result int16) {
+	joinRes := protocol.JoinResPacket{
+		ErrorCode: result,
+	}
 
+	packet, _ := joinRes.EncodingPacket()
+	network.SendToClient(sessionUniqueId, sessionId, packet)
 }
