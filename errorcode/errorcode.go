@@ -1,0 +1,9 @@
+package errorcode
+
+const (
+	ERROR_CODE_NONE            = 1
+	ERROR_CODE_INVALID_REQUEST = 1001
+	ERROR_CODE_FAIL_LOGIN      = 2001
+	ERROR_CODE_FAIL_JOIN       = 2002
+	ERROR_CODE_MYSQL_ERROR     = 2003
+)

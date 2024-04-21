@@ -3,8 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"server/errorcode"
 	"server/network"
 	"server/protocol"
+	"server/service"
 	"time"
 )
 
@@ -53,7 +55,7 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 				if packet.Id == protocol.PACKET_ID_LOGIN_REQ {
 					ProcessPacketLogin(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else if packet.Id == protocol.PACKET_ID_JOIN_REQ {
-
+					ProcessPacketJoin(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else if packet.Id == protocol.PACKET_ID_PING_REQ {
 					ProcessPacketPing(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else {
@@ -89,25 +91,29 @@ func ProcessPacketJoin(sessionUniqueId uint64, sessionId int32, bodySize int16, 
 	var request protocol.JoinReqPacket
 	result := (&request).Decoding(bodyData)
 	if !result {
+		sendJoinResult(sessionUniqueId, sessionId, errorcode.ERROR_CODE_INVALID_REQUEST)
 		return
 	}
 
 	userID := bytes.Trim(request.UserID[:], "\x00")
 	userPW := bytes.Trim(request.UserPW[:], "\x00")
+	userNAME := bytes.Trim(request.UserName[:], "\x00")
 
 	if len(userID) <= 0 || len(userPW) <= 0 {
+		sendJoinResult(sessionUniqueId, sessionId, errorcode.ERROR_CODE_INVALID_REQUEST)
 		return
 	}
 
-	fmt.Printf("[%d]request join: %s-%s\n", sessionUniqueId, string(userID), string(userPW))
 	/* 회원가입 */
-	sendJoinResult(sessionUniqueId, sessionId, protocol.ERROR_CODE_NONE)
+	err := service.JoinAccount(userID, userPW, userNAME)
+	sendJoinResult(sessionUniqueId, sessionId, err)
 }
 
 func ProcessPacketLogin(sessionUniqueId uint64, sessionId int32, bodySize int16, bodyData []byte) {
 	var request protocol.LoginReqPacket
 	result := (&request).Decoding(bodyData)
 	if !result {
+		sendLoginResult(sessionUniqueId, sessionId, errorcode.ERROR_CODE_INVALID_REQUEST)
 		return
 	}
 
@@ -115,12 +121,13 @@ func ProcessPacketLogin(sessionUniqueId uint64, sessionId int32, bodySize int16,
 	userPW := bytes.Trim(request.UserPW[:], "\x00")
 
 	if len(userID) <= 0 || len(userPW) <= 0 {
+		sendLoginResult(sessionUniqueId, sessionId, errorcode.ERROR_CODE_INVALID_REQUEST)
 		return
 	}
 
-	fmt.Printf("[%d]request login: %s - %s\n", sessionUniqueId, string(userID), string(userPW))
+	err := service.LoginAccount(userID, userPW)
 	/* 로그인 */
-	sendLoginResult(sessionUniqueId, sessionId, protocol.ERROR_CODE_NONE)
+	sendLoginResult(sessionUniqueId, sessionId, err)
 }
 
 func sendLoginResult(sessionUniqueId uint64, sessionId int32, result int16) {

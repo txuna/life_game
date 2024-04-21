@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"server/mysql"
 	"server/network"
-	"server/redis"
+	"server/service"
 )
 
 func main() {
@@ -28,13 +27,13 @@ func main() {
 		return
 	}
 
-	err = redis.InitRedis(redisConfig)
+	err = service.InitRedis(redisConfig)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	err = mysql.InitMysql(dbConfig)
+	err = service.InitMysql(dbConfig)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -58,8 +57,8 @@ func parseNetConfig() (network.NetConfig, error) {
 	return netConfig, err
 }
 
-func parseDbConfig() (mysql.DbConfig, error) {
-	var dbConfig mysql.DbConfig
+func parseDbConfig() (service.DbConfig, error) {
+	var dbConfig service.DbConfig
 	file, err := os.Open("./config/db_config.json")
 	if err != nil {
 		return dbConfig, nil
@@ -73,8 +72,8 @@ func parseDbConfig() (mysql.DbConfig, error) {
 	return dbConfig, nil
 }
 
-func parseRedisConfig() (redis.RedisConfig, error) {
-	var redisConfig redis.RedisConfig
+func parseRedisConfig() (service.RedisConfig, error) {
+	var redisConfig service.RedisConfig
 	file, err := os.Open("./config/redis_config.json")
 	if err != nil {
 		return redisConfig, err

@@ -3,7 +3,7 @@ package network
 import (
 	"fmt"
 	"net"
-	"server/redis"
+	"server/service"
 	"sync"
 	"sync/atomic"
 )
@@ -66,8 +66,8 @@ func StartServerBlock(netConfig NetConfig, networkFunctor SessionNetworkFunctor)
 			Create TCP Session
 			Index : Allocate from Session Index Pool (Deque)
 		*/
-		//var seqNumber uint64 = 0
-		seqNumber := redis.GetUniqueSessionId()
+		///var seqNumber uint64 = 0
+		seqNumber := service.GetUniqueSessionId()
 		if seqNumber == 0 {
 			fmt.Println("Failed Alloc SessionUniqueId")
 			continue

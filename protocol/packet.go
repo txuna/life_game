@@ -15,6 +15,7 @@ const (
 const (
 	MAX_USER_ID_BYTE_LENGTH      = 16
 	MAX_USER_PW_BYTE_LENGTH      = 16
+	MAX_USER_NAME_BYTE_LENGTH    = 16
 	MAX_CHAT_MESSAGE_BYTE_LENGTH = 126
 )
 
@@ -147,22 +148,24 @@ func (loginRes *LoginResPacket) Decoding(bodyData []byte) bool {
 }
 
 type JoinReqPacket struct {
-	UserID []byte
-	UserPW []byte
+	UserID   []byte
+	UserPW   []byte
+	UserName []byte
 }
 
 func (joinReq JoinReqPacket) EncodingPacket() ([]byte, int16) {
-	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH + MAX_USER_NAME_BYTE_LENGTH
 	sendBuf := make([]byte, totalSize)
 	writer := network.MakeWrite(sendBuf, true)
 	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_REQ, 0)
 	writer.WriteBytes(joinReq.UserID[:])
 	writer.WriteBytes(joinReq.UserPW[:])
+	writer.WriteBytes(joinReq.UserName[:])
 	return sendBuf, totalSize
 }
 
 func (joinReq *JoinReqPacket) Decoding(bodyData []byte) bool {
-	bodySize := MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	bodySize := MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH + MAX_USER_NAME_BYTE_LENGTH
 	if len(bodyData) != bodySize {
 		return false
 	}
@@ -176,6 +179,11 @@ func (joinReq *JoinReqPacket) Decoding(bodyData []byte) bool {
 	}
 
 	joinReq.UserPW, err = reader.ReadBytes(MAX_USER_PW_BYTE_LENGTH)
+	if err != nil {
+		return false
+	}
+
+	joinReq.UserName, err = reader.ReadBytes(MAX_USER_NAME_BYTE_LENGTH)
 	return err == nil
 }
 
@@ -187,7 +195,7 @@ func (joinRes JoinResPacket) EncodingPacket() ([]byte, int16) {
 	totalSize := _packetHeaderSize + 2
 	sendBuf := make([]byte, totalSize)
 	writer := network.MakeWrite(sendBuf, true)
-	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_RES, 0)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_JOIN_RES, 0)
 	writer.WriteS16(joinRes.ErrorCode)
 	return sendBuf, totalSize
 }
