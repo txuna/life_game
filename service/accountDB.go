@@ -19,6 +19,9 @@ type DbConfig struct {
 	Protocol string `json:"protocol"`
 }
 
+/*
+데이터베이스 users 테이블 칼럼
+*/
 type Account struct {
 	ID       int64
 	UserID   string
@@ -29,6 +32,10 @@ type Account struct {
 var _mysqlClient *sql.DB
 var _mysqlConfig DbConfig
 
+/*
+Mysql 초기화 부분
+쿠버네티스 업로드시 환경변수로 진행
+*/
 func InitMysql(dbConfig DbConfig) error {
 	_mysqlConfig = dbConfig
 
@@ -49,6 +56,9 @@ func InitMysql(dbConfig DbConfig) error {
 	return nil
 }
 
+/*
+user_id를 기반으로 users 테이블에서 user를 가지고옴
+*/
 func LoadAccount(strUserId string) (Account, error) {
 	stmt, err := _mysqlClient.Prepare("select user_id, user_name, user_pw from users where user_id = ?")
 	if err != nil {
@@ -73,6 +83,9 @@ func LoadAccount(strUserId string) (Account, error) {
 	}, nil
 }
 
+/*
+사용자 로그인
+*/
 func LoginAccount(userID, userPW []byte) int16 {
 	account, err := LoadAccount(string(userID))
 	if err != nil {
@@ -86,6 +99,9 @@ func LoginAccount(userID, userPW []byte) int16 {
 	return errorcode.ERROR_CODE_NONE
 }
 
+/*
+사용자 추가
+*/
 func JoinAccount(userID, userPW, userNAME []byte) int16 {
 	_, err := LoadAccount(string(userID))
 	if err == nil {
@@ -109,6 +125,7 @@ func JoinAccount(userID, userPW, userNAME []byte) int16 {
 		return errorcode.ERROR_CODE_MYSQL_ERROR
 	}
 
+	/* auto increasement된 값 */
 	_, _ = result.LastInsertId()
 	return errorcode.ERROR_CODE_NONE
 }

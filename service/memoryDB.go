@@ -42,6 +42,9 @@ func InitRedis(redisConfig RedisConfig) error {
 	return nil
 }
 
+/*
+Redis에 저장된 세션 유니크값을 Lua Script로 가져옴
+*/
 func GetUniqueSessionId() uint64 {
 	script := redis.NewScript(`
 		local key = KEYS[1]
@@ -95,7 +98,8 @@ func del(key string) error {
 }
 
 /*
- */
+Redis에 유저정보를 저장한다.
+*/
 func StoreUserInfo(sessionUniqueId uint64, sessionId int32, isAuth bool) error {
 	redisUser := RedisUser{
 		UniqueID:  sessionUniqueId,
@@ -110,10 +114,16 @@ func StoreUserInfo(sessionUniqueId uint64, sessionId int32, isAuth bool) error {
 	return set(key, redisUser)
 }
 
+/*
+Redis로부터 유저정보를 불러온다.
+*/
 func LoadUserInfo(networkUniqueID uint64, serverSessionId int32) {
 
 }
 
+/*
+Redis에서 유저정보를 지운다.
+*/
 func RemoveUserInfo(sessionUniqueId uint64) error {
 	userPrefix := UserPrefix()
 	key := fmt.Sprintf("%s%d", userPrefix, sessionUniqueId)

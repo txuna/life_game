@@ -19,20 +19,6 @@ const (
 	MAX_CHAT_MESSAGE_BYTE_LENGTH = 126
 )
 
-type Header struct {
-	TotalSize  int16
-	ID         int16
-	PacketType int8
-}
-
-type Packet struct {
-	UserSessionIndex       int32
-	UserSessionUniqueIndex uint64
-	Id                     int16
-	DataSize               int16
-	Data                   []byte
-}
-
 var _packetHeaderSize int16
 
 func InitPacketHeaderSize() {
@@ -66,12 +52,18 @@ func PeekPacketBody(rawData []byte) (int16, []byte) {
 	return bodySize, []byte{}
 }
 
+/*
+패킷 헤더를 추가한다.
+*/
 func EncodingPacketHeader(writer *network.RawPacketData, totalSize int16, pktId int16, pktType int8) {
 	writer.WriteS16(totalSize)
 	writer.WriteS16(pktId)
 	writer.WriteS8(pktType)
 }
 
+/*
+패킷 헤더를 분석한다.
+*/
 func DecodingPacketHeader(header *Header, data []byte) {
 	reader := network.MakeReader(data, true)
 	header.TotalSize, _ = reader.ReadS16()
@@ -88,11 +80,7 @@ func PacketHeaderSize() int16 {
 	return (int16)(hSize)
 }
 
-type LoginReqPacket struct {
-	UserID []byte
-	UserPW []byte
-}
-
+/* 로그인 요청 */
 func (loginReq LoginReqPacket) EncodingPacket() ([]byte, int16) {
 	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
 	sendBuf := make([]byte, totalSize)
@@ -121,10 +109,6 @@ func (loginReq *LoginReqPacket) Decoding(bodyData []byte) bool {
 	return err == nil
 }
 
-type LoginResPacket struct {
-	ErrorCode int16
-}
-
 func (loginRes LoginResPacket) EncodingPacket() ([]byte, int16) {
 	totalSize := _packetHeaderSize + 2
 	sendBuf := make([]byte, totalSize)
@@ -134,6 +118,7 @@ func (loginRes LoginResPacket) EncodingPacket() ([]byte, int16) {
 	return sendBuf, totalSize
 }
 
+/* 로그인 응답 */
 func (loginRes *LoginResPacket) Decoding(bodyData []byte) bool {
 	bodySize := 2
 	if len(bodyData) != bodySize {
@@ -147,12 +132,6 @@ func (loginRes *LoginResPacket) Decoding(bodyData []byte) bool {
 	return err == nil
 }
 
-type JoinReqPacket struct {
-	UserID   []byte
-	UserPW   []byte
-	UserName []byte
-}
-
 func (joinReq JoinReqPacket) EncodingPacket() ([]byte, int16) {
 	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH + MAX_USER_NAME_BYTE_LENGTH
 	sendBuf := make([]byte, totalSize)
@@ -164,6 +143,7 @@ func (joinReq JoinReqPacket) EncodingPacket() ([]byte, int16) {
 	return sendBuf, totalSize
 }
 
+/* 회원가입 요청 */
 func (joinReq *JoinReqPacket) Decoding(bodyData []byte) bool {
 	bodySize := MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH + MAX_USER_NAME_BYTE_LENGTH
 	if len(bodyData) != bodySize {
@@ -187,10 +167,7 @@ func (joinReq *JoinReqPacket) Decoding(bodyData []byte) bool {
 	return err == nil
 }
 
-type JoinResPacket struct {
-	ErrorCode int16
-}
-
+/* 회원가입 응답 */
 func (joinRes JoinResPacket) EncodingPacket() ([]byte, int16) {
 	totalSize := _packetHeaderSize + 2
 	sendBuf := make([]byte, totalSize)
@@ -213,10 +190,7 @@ func (joinRes *JoinResPacket) Decoding(bodyData []byte) bool {
 	return err == nil
 }
 
-type PingReqPacket struct {
-	Ping int8
-}
-
+/* 핑 요청 */
 func (pingReq PingReqPacket) EncodingPacket() ([]byte, int16) {
 	totalSize := _packetHeaderSize + int16(network.Sizeof(reflect.TypeOf(int8(0))))
 	sendBuf := make([]byte, totalSize)
@@ -238,10 +212,7 @@ func (pingReq *PingReqPacket) Decoding(bodyData []byte) bool {
 	return err == nil
 }
 
-type PingResPacket struct {
-	Pong int8
-}
-
+/* 핑 응답 */
 func (pingRes PingResPacket) EncodingPacket() ([]byte, int16) {
 	totalSize := _packetHeaderSize + int16(network.Sizeof(reflect.TypeOf(int8(0))))
 	sendBuf := make([]byte, totalSize)
