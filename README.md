@@ -1,6 +1,6 @@
 # Client - Server Architecture 
 
-### Goal 
+### Goal .
 서버는 단일서버가 아닌 스케일 아웃이 될 수 있다는 전제하게 구성된다.
 
 ### Tech Stack 
