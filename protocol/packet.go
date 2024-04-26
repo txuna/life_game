@@ -149,7 +149,6 @@ func (joinReq *JoinReqPacket) Decoding(bodyData []byte) bool {
 	if len(bodyData) != bodySize {
 		return false
 	}
-
 	reader := network.MakeReader(bodyData, true)
 
 	var err error
