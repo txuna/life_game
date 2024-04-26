@@ -1,6 +1,8 @@
 package network
 
-import "sync"
+import (
+	"sync"
+)
 
 /*
 네트워크에 접속한 클라이언트에 대해 새로운 세션을 추가함
@@ -14,7 +16,7 @@ func (sessionMgr *TcpSessionManager) appendSession(session *TcpSession) bool {
 		return false
 	}
 
-	_, result := sessionMgr.findSession(sessionUniqueId, sessionIndex)
+	_, result := sessionMgr.findSession(sessionUniqueId)
 	/* 이미 세션이 존재한다면 추가로 만들지 않음 */
 	if result {
 		return false
@@ -60,7 +62,7 @@ func (sessionMgr *TcpSessionManager) createSessionPool(poolSize int) {
 	}
 }
 
-func (sessionMgr *TcpSessionManager) findSession(sessionUniqueId uint64, sessionId int32) (*TcpSession, bool) {
+func (sessionMgr *TcpSessionManager) findSession(sessionUniqueId uint64) (*TcpSession, bool) {
 	if session, ok := sessionMgr.SessionMap.Load(sessionUniqueId); ok {
 		return session.(*TcpSession), true
 	}
@@ -81,4 +83,26 @@ func createSessionManager(networkFunctor SessionNetworkFunctor) *TcpSessionManag
 	sessionMgr.createSessionPool(POOL_SIZE)
 
 	return sessionMgr
+}
+
+/* redis에서 로드? */
+func (sessionMgr *TcpSessionManager) sendPacket(sessionUniqueId uint64, sessionId int32, data []byte) bool {
+	session, result := sessionMgr.findSession(sessionUniqueId)
+	if !result {
+		return false
+	}
+
+	_, err := session.Conn.Write(data)
+
+	if err != nil {
+		session.closeProcess()
+		return false
+	}
+
+	return true
+}
+
+/* 레디스에 있는거 다 불러와? */
+func (sessionMgr *TcpSessionManager) sendPacketAllClient(data []byte) {
+
 }

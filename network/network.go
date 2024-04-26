@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 	"net"
+	"server/service"
 	"sync"
 	"sync/atomic"
 )
@@ -24,9 +25,10 @@ type SessionNetworkFunctor struct {
 }
 
 type TcpSession struct {
-	SeqIndex       uint64
-	Index          int32
-	Conn           net.Conn
+	SeqIndex uint64 /* 모든 서버 통틀어서 유니크한 값 */
+	Index    int32  /* 특정 서버에서 유니크한 값 */
+	Conn     net.Conn
+
 	NetworkFunctor SessionNetworkFunctor
 }
 
@@ -43,8 +45,7 @@ type TcpSessionManager struct {
 }
 
 func StartServerBlock(netConfig NetConfig, networkFunctor SessionNetworkFunctor) {
-
-	fmt.Println("TCP Server Start on 8000 port")
+	fmt.Printf("TCP Server Start on %s:%d port\n", netConfig.BindAdress, netConfig.Port)
 	/* TcpSession 매니저 생성 */
 	_tcpSessionManager = createSessionManager(networkFunctor)
 	address := fmt.Sprintf(":%d", netConfig.Port)
@@ -65,8 +66,14 @@ func StartServerBlock(netConfig NetConfig, networkFunctor SessionNetworkFunctor)
 			Create TCP Session
 			Index : Allocate from Session Index Pool (Deque)
 		*/
+		///var seqNumber uint64 = 0
+		seqNumber := service.GetUniqueSessionId()
+		if seqNumber == 0 {
+			fmt.Println("Failed Alloc SessionUniqueId")
+			continue
+		}
 		newTcpSession := &TcpSession{
-			SeqIndex:       SeqNumIncrement(),
+			SeqIndex:       seqNumber,
 			Conn:           conn,
 			NetworkFunctor: _tcpSessionManager.NetworkFunctor,
 		}
@@ -114,7 +121,7 @@ func (session *TcpSession) handleTcpRead() {
 			*/
 			/*
 				if recvBytes < PACKET_HEADER_SIZE {
-					session.closeProcess()
+					session.closeProcess()r
 					return
 				}
 			*/
@@ -217,6 +224,14 @@ func (session *TcpSession) closeProcess() {
 func SeqNumIncrement() uint64 {
 	newValue := atomic.AddUint64(&_seqNumber, 1)
 	return newValue
+}
+
+func SendToClient(sessionUniqueId uint64, sessionId int32, data []byte) {
+	_tcpSessionManager.sendPacket(sessionUniqueId, sessionId, data)
+}
+
+func SendToAllClient(data []byte) {
+	_tcpSessionManager.sendPacketAllClient(data)
 }
 
 /* 전역변수 */

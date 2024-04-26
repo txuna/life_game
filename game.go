@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	clientsession "server/clientSession"
 	"server/network"
 	"server/protocol"
 )
@@ -19,6 +20,11 @@ func startLifeGameServer(netConfig network.NetConfig) {
 	}
 
 	protocol.InitPacketHeaderSize()
+
+	/*
+		클라이언트 세션매니저 초기화
+	*/
+	clientsession.Init()
 
 	/*
 		채널 버퍼 256으로 설정
@@ -39,7 +45,7 @@ func startLifeGameServer(netConfig network.NetConfig) {
 		OnClose:             server.OnClose,
 		OnReceive:           server.OnReceive,
 		PacketTotalSizeFunc: network.PacketTotalSize,
-		PacketHeaderSize:    network.PACKET_HEADER_SIZE,
+		PacketHeaderSize:    protocol.GetPacketHeaderSize(),
 	}
 
 	network.StartServerBlock(netConfig, snFunctor)
@@ -50,6 +56,7 @@ func startLifeGameServer(netConfig network.NetConfig) {
 */
 func (server *LifeGameServer) OnClose(sessionUniqueId uint64, sessionId int32) {
 	fmt.Printf("Client Disconnected:%d - %d\n", sessionUniqueId, sessionId)
+	_ = clientsession.RemoveSession(sessionUniqueId)
 }
 
 /*
@@ -58,6 +65,7 @@ func (server *LifeGameServer) OnClose(sessionUniqueId uint64, sessionId int32) {
 */
 func (server *LifeGameServer) OnConnect(sessionUniqueId uint64, sessionId int32) {
 	fmt.Printf("New Client Connected:%d - %d\n", sessionUniqueId, sessionId)
+	_ = clientsession.AddSession(sessionUniqueId, sessionId)
 }
 
 /*
@@ -65,6 +73,5 @@ func (server *LifeGameServer) OnConnect(sessionUniqueId uint64, sessionId int32)
 인/디코딩 작업 들어가야함
 */
 func (server *LifeGameServer) OnReceive(sessionUniqueId uint64, sessionId int32, packet []byte) {
-	fmt.Printf("Client Send Message:%d-%d: %s\n", sessionUniqueId, sessionId, packet)
 	server.DistributePacket(sessionUniqueId, sessionId, packet)
 }

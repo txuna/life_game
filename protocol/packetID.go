@@ -8,3 +8,8 @@ const (
 	PACKET_ID_PING_REQ  = 705
 	PACKET_ID_PING_RES  = 706
 )
+
+const (
+	PING = 1
+	PONG = 8
+)

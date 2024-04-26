@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"server/controller"
 	"server/protocol"
 	"time"
 )
@@ -48,17 +49,12 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 				bodySize := packet.DataSize
 				bodyData := packet.Data
 
-				_ = sessionId
-				_ = sessionUniqueId
-				_ = bodySize
-				_ = bodyData
-
 				if packet.Id == protocol.PACKET_ID_LOGIN_REQ {
-
+					controller.ProcessPacketLogin(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else if packet.Id == protocol.PACKET_ID_JOIN_REQ {
-
+					controller.ProcessPacketJoin(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else if packet.Id == protocol.PACKET_ID_PING_REQ {
-
+					controller.ProcessPacketPing(sessionUniqueId, sessionId, bodySize, bodyData)
 				} else {
 					fmt.Println("Invalid Packet ID")
 				}
@@ -70,8 +66,9 @@ func (server *LifeGameServer) PacketProcessGoroutine() {
 		*/
 		case curTime := <-roomUpdateTimerTicker.C:
 			{
-				fmt.Println("Update Room")
-				fmt.Println(curTime)
+				_ = curTime
+				//fmt.Println("Update Room")
+				//fmt.Println(curTime)
 			}
 		}
 	}

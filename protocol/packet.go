@@ -3,7 +3,7 @@ package protocol
 import (
 	"encoding/binary"
 	"reflect"
-	"unsafe"
+	"server/network"
 )
 
 const (
@@ -15,27 +15,18 @@ const (
 const (
 	MAX_USER_ID_BYTE_LENGTH      = 16
 	MAX_USER_PW_BYTE_LENGTH      = 16
+	MAX_USER_NAME_BYTE_LENGTH    = 16
 	MAX_CHAT_MESSAGE_BYTE_LENGTH = 126
 )
-
-type Header struct {
-	TotalSize  int16
-	ID         int16
-	PacketType int8
-}
-
-type Packet struct {
-	UserSessionIndex       int32
-	UserSessionUniqueIndex uint64
-	Id                     int16
-	DataSize               int16
-	Data                   []byte
-}
 
 var _packetHeaderSize int16
 
 func InitPacketHeaderSize() {
 	_packetHeaderSize = PacketHeaderSize()
+}
+
+func GetPacketHeaderSize() int16 {
+	return _packetHeaderSize
 }
 
 /*
@@ -62,80 +53,184 @@ func PeekPacketBody(rawData []byte) (int16, []byte) {
 }
 
 /*
+패킷 헤더를 추가한다.
+*/
+func EncodingPacketHeader(writer *network.RawPacketData, totalSize int16, pktId int16, pktType int8) {
+	writer.WriteS16(totalSize)
+	writer.WriteS16(pktId)
+	writer.WriteS8(pktType)
+}
+
+/*
+패킷 헤더를 분석한다.
+*/
+func DecodingPacketHeader(header *Header, data []byte) {
+	reader := network.MakeReader(data, true)
+	header.TotalSize, _ = reader.ReadS16()
+	header.ID, _ = reader.ReadS16()
+	header.PacketType, _ = reader.ReadS8()
+}
+
+/*
 패킷헤더의 크기를 사전에 구함
 */
 func PacketHeaderSize() int16 {
 	var header Header
-	hSize := unsafe.Sizeof(reflect.TypeOf(header))
+	hSize := network.Sizeof(reflect.TypeOf(header))
 	return (int16)(hSize)
 }
 
-type LoginReqPacket struct {
-	UserID []byte
-	UserPW []byte
+/* 로그인 요청 */
+func (loginReq LoginReqPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_REQ, 0)
+	writer.WriteBytes(loginReq.UserID[:])
+	writer.WriteBytes(loginReq.UserPW[:])
+	return sendBuf, totalSize
 }
 
-func (loginReq LoginReqPacket) EncodingPacket() {
+func (loginReq *LoginReqPacket) Decoding(bodyData []byte) bool {
+	bodySize := MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH
+	if len(bodyData) != bodySize {
+		return false
+	}
 
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	loginReq.UserID, err = reader.ReadBytes(MAX_USER_ID_BYTE_LENGTH)
+	if err != nil {
+		return false
+	}
+
+	loginReq.UserPW, err = reader.ReadBytes(MAX_USER_PW_BYTE_LENGTH)
+	return err == nil
 }
 
-func (loginReq *LoginReqPacket) Decoding() {
-
+func (loginRes LoginResPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + 2
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_RES, 0)
+	writer.WriteS16(loginRes.ErrorCode)
+	return sendBuf, totalSize
 }
 
-type LoginResPacket struct {
+/* 로그인 응답 */
+func (loginRes *LoginResPacket) Decoding(bodyData []byte) bool {
+	bodySize := 2
+	if len(bodyData) != bodySize {
+		return false
+	}
+
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	loginRes.ErrorCode, err = reader.ReadS16()
+	return err == nil
 }
 
-func (loginRes LoginResPacket) EncodingPacket() {
-
+func (joinReq JoinReqPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH + MAX_USER_NAME_BYTE_LENGTH
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_LOGIN_REQ, 0)
+	writer.WriteBytes(joinReq.UserID[:])
+	writer.WriteBytes(joinReq.UserPW[:])
+	writer.WriteBytes(joinReq.UserName[:])
+	return sendBuf, totalSize
 }
 
-func (loginRes *LoginResPacket) Decoding() {
+/* 회원가입 요청 */
+func (joinReq *JoinReqPacket) Decoding(bodyData []byte) bool {
+	bodySize := MAX_USER_ID_BYTE_LENGTH + MAX_USER_PW_BYTE_LENGTH + MAX_USER_NAME_BYTE_LENGTH
+	if len(bodyData) != bodySize {
+		return false
+	}
+	reader := network.MakeReader(bodyData, true)
 
+	var err error
+	joinReq.UserID, err = reader.ReadBytes(MAX_USER_ID_BYTE_LENGTH)
+	if err != nil {
+		return false
+	}
+
+	joinReq.UserPW, err = reader.ReadBytes(MAX_USER_PW_BYTE_LENGTH)
+	if err != nil {
+		return false
+	}
+
+	joinReq.UserName, err = reader.ReadBytes(MAX_USER_NAME_BYTE_LENGTH)
+	return err == nil
 }
 
-type JoinReqPacket struct {
+/* 회원가입 응답 */
+func (joinRes JoinResPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + 2
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_JOIN_RES, 0)
+	writer.WriteS16(joinRes.ErrorCode)
+	return sendBuf, totalSize
 }
 
-func (joinReq JoinReqPacket) EncodingPacket() {
+func (joinRes *JoinResPacket) Decoding(bodyData []byte) bool {
+	bodySize := 2
+	if len(bodyData) != bodySize {
+		return false
+	}
 
+	reader := network.MakeReader(bodyData, true)
+
+	var err error
+	joinRes.ErrorCode, err = reader.ReadS16()
+	return err == nil
 }
 
-func (joinReq *JoinReqPacket) Decoding() {
-
+/* 핑 요청 */
+func (pingReq PingReqPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + int16(network.Sizeof(reflect.TypeOf(int8(0))))
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_PING_REQ, 0)
+	writer.WriteS8(pingReq.Ping)
+	return sendBuf, totalSize
 }
 
-type JoinResPacket struct {
+func (pingReq *PingReqPacket) Decoding(bodyData []byte) bool {
+	bodySize := network.Sizeof(reflect.TypeOf(int8(0)))
+	if len(bodyData) != bodySize {
+		return false
+	}
+
+	reader := network.MakeReader(bodyData, true)
+	var err error
+	pingReq.Ping, err = reader.ReadS8()
+	return err == nil
 }
 
-func (joinRes JoinResPacket) EncodingPacket() {
-
+/* 핑 응답 */
+func (pingRes PingResPacket) EncodingPacket() ([]byte, int16) {
+	totalSize := _packetHeaderSize + int16(network.Sizeof(reflect.TypeOf(int8(0))))
+	sendBuf := make([]byte, totalSize)
+	writer := network.MakeWrite(sendBuf, true)
+	EncodingPacketHeader(&writer, totalSize, PACKET_ID_PING_RES, 0)
+	writer.WriteS8(pingRes.Pong)
+	return sendBuf, totalSize
 }
 
-func (joinRes *JoinResPacket) Decoding() {
+func (pingRes *PingResPacket) Decoding(bodyData []byte) bool {
+	bodySize := network.Sizeof(reflect.TypeOf(int8(0)))
+	if len(bodyData) != bodySize {
+		return false
+	}
 
-}
+	reader := network.MakeReader(bodyData, true)
 
-type PingReqPacket struct {
-	Ping int8
-}
+	var err error
+	pingRes.Pong, err = reader.ReadS8()
 
-func (pingReq PingReqPacket) EncodingPacket() {
-
-}
-
-func (pingReq *PingReqPacket) Decoding() {
-
-}
-
-type PingResPacket struct {
-	Pong int8
-}
-
-func (pingRes PingResPacket) EncodingPacket() {
-
-}
-
-func (pingRes *PingResPacket) Decoding() {
-
+	return err == nil
 }
