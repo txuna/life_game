@@ -101,41 +101,39 @@ PACKET HEADER STRUCTURE
 func (session *TcpSession) handleTcpRead() {
 	/* 클라이언트의 접속 처리 */
 	session.NetworkFunctor.OnConnect(session.SeqIndex, session.Index)
+	var startRecvPos int16 = 0
+	var result int
+	recvBuff := make([]byte, MAX_BUFFER)
+
 	for {
-		var startRecvPos int16 = 0
-		var result int
-		recvBuff := make([]byte, MAX_BUFFER)
+		recvBytes, err := session.Conn.Read(recvBuff[startRecvPos:])
+		/*
+			클라이언트 연결 끊어짐
+		*/
+		if err != nil {
+			session.closeProcess()
+			return
+		}
 
-		for {
-			recvBytes, err := session.Conn.Read(recvBuff[startRecvPos:])
-			/*
-				클라이언트 연결 끊어짐
-			*/
-			if err != nil {
-				session.closeProcess()
+		/*
+			이 문장은 필요없을 듯
+		*/
+		/*
+			if recvBytes < PACKET_HEADER_SIZE {
+				session.closeProcess()r
 				return
 			}
+		*/
 
-			/*
-				이 문장은 필요없을 듯
-			*/
-			/*
-				if recvBytes < PACKET_HEADER_SIZE {
-					session.closeProcess()r
-					return
-				}
-			*/
-
-			/*
-				링버퍼 구조를 이루고 있음 startRecvPos는 패킷을 만들기 위한 길이까지만 설정하고
-				남는 패킷은 나음에 startRecvPos부터 시작
-			*/
-			readAbleByte := int16(startRecvPos) + int16(recvBytes)
-			startRecvPos, result = session.makePacket(readAbleByte, recvBuff)
-			if result != NET_ERROR_NONE {
-				session.closeProcess()
-				return
-			}
+		/*
+			링버퍼 구조를 이루고 있음 startRecvPos는 패킷을 만들기 위한 길이까지만 설정하고
+			남는 패킷은 나음에 startRecvPos부터 시작
+		*/
+		readAbleByte := int16(startRecvPos) + int16(recvBytes)
+		startRecvPos, result = session.makePacket(readAbleByte, recvBuff)
+		if result != NET_ERROR_NONE {
+			session.closeProcess()
+			return
 		}
 	}
 }

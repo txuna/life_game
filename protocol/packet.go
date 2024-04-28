@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"reflect"
 	"server/network"
+
+	"github.com/vmihailenco/msgpack"
 )
 
 const (
@@ -72,12 +74,28 @@ func DecodingPacketHeader(header *Header, data []byte) {
 }
 
 /*
-패킷헤더의 크기를 사전에 구함
+패킷헤더의 크기를 사전에 구함bi
 */
 func PacketHeaderSize() int16 {
 	var header Header
 	hSize := network.Sizeof(reflect.TypeOf(header))
 	return (int16)(hSize)
+}
+
+func EncodingPacket(pkId int16, pkType int8, v interface{}) ([]byte, int16) {
+	raw, _ := msgpack.Marshal(v)
+	totalSize := _packetHeaderSize + int16(len(raw))
+	sendBuff := make([]byte, totalSize)
+
+	writer := network.MakeWrite(sendBuff, true)
+	EncodingPacketHeader(&writer, int16(totalSize), pkId, pkType)
+	writer.WriteBytes(raw)
+	return sendBuff, int16(totalSize)
+}
+
+func DecodingPacket(bodyData []byte, v interface{}) bool {
+	err := msgpack.Unmarshal(bodyData, v)
+	return err == nil
 }
 
 /* 로그인 요청 */

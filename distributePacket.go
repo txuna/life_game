@@ -28,7 +28,6 @@ func (server *LifeGameServer) DistributePacket(sessionUniqueId uint64, sessionId
 		수신한 패킷을 처리하는 채널로 보냄
 	*/
 	server.PacketChan <- packet
-
 }
 
 /*

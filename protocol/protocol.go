@@ -39,10 +39,10 @@ type JoinResPacket struct {
 
 /* 핑 요청 */
 type PingReqPacket struct {
-	Ping int8
+	Ping int8 `msgpack:"ping"`
 }
 
 /* 핑 응답 */
 type PingResPacket struct {
-	Pong int8
+	Pong int8 `msgpack:"pong"`
 }
